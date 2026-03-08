@@ -17,117 +17,54 @@ public class FoodQuick {
     // -----------------------------
     // Capturing Customer details
     // -----------------------------
-    System.out.print("Enter customer name: ");
-    String name = sc.nextLine();
-
-    System.out.print("Enter customer contact number: ");
-    String contactNumber = sc.nextLine();
-
-    System.out.print("Enter customer email address: ");
-    String email = sc.nextLine();
-
-    System.out.print("Enter customer delivery address: ");
-    String address = sc.nextLine();
-
-    System.out.print("Enter customer city/location: ");
-    String location = sc.nextLine();
-
-    Customer customer = new Customer(name, contactNumber, email, address, location);
+    Customer customer = captureCustomerDetails(sc);
 
     // -----------------------------
     // Capturing Restaurant details
     // -----------------------------
-    System.out.print("Enter restaurant name: ");
-    String restaurantName = sc.nextLine();
-
-    System.out.print("Enter restaurant location: ");
-    String restaurantLocation = sc.nextLine();
-
-    System.out.print("Enter restaurant contact number: ");
-    String restaurantContactNumber = sc.nextLine();
-
-    Restaurant restaurant = new Restaurant(restaurantName, restaurantLocation, restaurantContactNumber);
+    Restaurant restaurant = captureResturantDetails(sc);
 
     // -----------------------------
     // Capturing Order details
     // -----------------------------
     int orderNumber = 1;
-    Order order = new Order(orderNumber);
-
-    System.out.print("How many different meals are you ordering? ");
-    int numMeals = Integer.parseInt(sc.nextLine());
-
-    for (int i = 0; i < numMeals; i++) {
-      System.out.println("Meal " + (i + 1) + ":");
-
-      System.out.print("Enter meal name: ");
-      String mealName = sc.nextLine();
-
-      System.out.print("Enter quantity: ");
-      int quantity = Integer.parseInt(sc.nextLine());
-
-      System.out.print("Enter price: ");
-      double price = Double.parseDouble(sc.nextLine());
-
-      order.addMeal(mealName, quantity, price);
-    }
+    Order order = captureOrderDetails(sc, orderNumber);
+    orderNumber++;
 
     // -----------------------------
-    // Special Instructions
+    // Capturing special instructions
     // -----------------------------
-    System.out.print("Enter any special preparation instructions (or type 'none'): ");
-    String instructions = sc.nextLine();
-    if (instructions.isEmpty()) {
-      instructions = "none"; // default if blank
-    }
-    order.setSpecialInstructions(instructions);
+    captureSpecialInstructions(sc, order);
 
     // -----------------------------
     // Reading driver-info.txt and creating Driver objects
     // -----------------------------
-    ArrayList<Driver> drivers = new ArrayList<>();
-
-    try {
-      File file = new File("driver-info.txt");
-      Scanner fileScanner = new Scanner(file);
-
-      while (fileScanner.hasNextLine()) {
-        String line = fileScanner.nextLine().trim();
-        if (line.isEmpty())
-          continue; // skip empty lines
-
-        String[] parts = line.split(",");
-        if (parts.length != 3)
-          continue; // skip invalid lines
-
-        String driverName = parts[0].trim();
-        String driverLocation = parts[1].trim();
-        int driverLoad = Integer.parseInt(parts[2].trim());
-
-        Driver driver = new Driver(driverName, driverLocation, driverLoad);
-        drivers.add(driver);
-      }
-
-      fileScanner.close();
-    } catch (FileNotFoundException e) {
-      System.out.println("Error: driver-info.txt file not found.");
-    }
+    ArrayList<Driver> drivers = readDriversFromFile();
 
     // -----------------------------
     // Selecting the nearest driver with the lowest load
     // -----------------------------
-    Driver selectedDriver = null;
-    int minLoad = Integer.MAX_VALUE;
-
-    for (Driver d : drivers) {
-      if (d.getLocation().equalsIgnoreCase(restaurant.getLocation()) && d.getLoad() < minLoad) {
-        selectedDriver = d;
-        minLoad = d.getLoad();
-      }
-    }
+    Driver selectedDriver = selectDriver(restaurant, drivers);
 
     // -----------------------------
     // Generating invoice.txt
+    // -----------------------------
+    generateInvoice(customer, restaurant, orderNumber, order, selectedDriver);
+
+    sc.close();
+  }
+
+  /**
+   * @param customer
+   * @param restaurant
+   * @param orderNumber
+   * @param order
+   * @param selectedDriver
+   */
+  private static void generateInvoice(Customer customer, Restaurant restaurant, int orderNumber, Order order,
+      Driver selectedDriver) {
+    // -----------------------------
+    // Method to generate invoice.txt
     // -----------------------------
     try {
       Formatter formatter = new Formatter("invoice.txt");
@@ -171,7 +108,158 @@ public class FoodQuick {
     } catch (Exception e) {
       System.out.println("Error generating invoice: " + e.getMessage());
     }
+  }
 
-    sc.close();
+  /**
+   * @param restaurant
+   * @param drivers
+   * @return
+   */
+  private static Driver selectDriver(Restaurant restaurant, ArrayList<Driver> drivers) {
+    // -----------------------------
+    // Method to select the nearest driver with the lowest load
+    // -----------------------------
+    Driver selectedDriver = null;
+    int minLoad = Integer.MAX_VALUE;
+
+    for (Driver d : drivers) {
+      if (d.getLocation().equalsIgnoreCase(restaurant.getLocation()) && d.getLoad() < minLoad) {
+        selectedDriver = d;
+        minLoad = d.getLoad();
+      }
+    }
+    return selectedDriver;
+  }
+
+  /**
+   * @return
+   */
+  private static ArrayList<Driver> readDriversFromFile() {
+    // -----------------------------
+    // Method for reading driver-info.txt and creating Driver objects
+    // -----------------------------
+    ArrayList<Driver> drivers = new ArrayList<>();
+
+    try {
+      File file = new File("driver-info.txt");
+      Scanner fileScanner = new Scanner(file);
+
+      while (fileScanner.hasNextLine()) {
+        String line = fileScanner.nextLine().trim();
+        if (line.isEmpty())
+          continue; // skip empty lines
+
+        String[] parts = line.split(",");
+        if (parts.length != 3)
+          continue; // skip invalid lines
+
+        String driverName = parts[0].trim();
+        String driverLocation = parts[1].trim();
+        int driverLoad = Integer.parseInt(parts[2].trim());
+
+        Driver driver = new Driver(driverName, driverLocation, driverLoad);
+        drivers.add(driver);
+      }
+
+      fileScanner.close();
+    } catch (FileNotFoundException e) {
+      System.out.println("Error: driver-info.txt file not found.");
+    }
+    return drivers;
+  }
+
+  /**
+   * @param sc
+   * @param order
+   */
+  private static void captureSpecialInstructions(Scanner sc, Order order) {
+    // -----------------------------
+    // Method to capture special instructions
+    // -----------------------------
+    System.out.print("Enter any special preparation instructions (or type 'none'): ");
+    String instructions = sc.nextLine();
+    if (instructions.isEmpty()) {
+      instructions = "none"; // default if blank
+    }
+    order.setSpecialInstructions(instructions);
+  }
+
+  /**
+   * @param sc
+   * @param orderNumber
+   * @return
+   */
+  // -----------------------------
+  // Method to capture Order details
+  // -----------------------------
+  private static Order captureOrderDetails(Scanner sc, int orderNumber) {
+    Order order = new Order(orderNumber);
+
+    System.out.print("How many different meals are you ordering? ");
+    int numMeals = Integer.parseInt(sc.nextLine());
+
+    for (int i = 0; i < numMeals; i++) {
+      System.out.println("Meal " + (i + 1) + ":");
+
+      System.out.print("Enter meal name: ");
+      String mealName = sc.nextLine();
+
+      System.out.print("Enter quantity: ");
+      int quantity = Integer.parseInt(sc.nextLine());
+
+      System.out.print("Enter price: ");
+      double price = Double.parseDouble(sc.nextLine());
+
+      order.addMeal(mealName, quantity, price);
+    }
+    return order;
+  }
+
+  /**
+   * @param sc
+   * @return
+   */
+  private static Restaurant captureResturantDetails(Scanner sc) {
+    // -----------------------------
+    // Method to capture Restaurant details
+    // -----------------------------
+    System.out.print("Enter restaurant name: ");
+    String restaurantName = sc.nextLine();
+
+    System.out.print("Enter restaurant location: ");
+    String restaurantLocation = sc.nextLine();
+
+    System.out.print("Enter restaurant contact number: ");
+    String restaurantContactNumber = sc.nextLine();
+
+    Restaurant restaurant = new Restaurant(restaurantName, restaurantLocation, restaurantContactNumber);
+    return restaurant;
+  }
+
+  /**
+   * @param sc
+   * @return
+   */
+  private static Customer captureCustomerDetails(Scanner sc) {
+    // -----------------------------
+    // Method to capture customer details
+    // -----------------------------
+    System.out.print("Enter customer name: ");
+    String name = sc.nextLine();
+
+    System.out.print("Enter customer contact number: ");
+    String contactNumber = sc.nextLine();
+
+    System.out.print("Enter customer email address: ");
+    String email = sc.nextLine();
+
+    System.out.print("Enter customer delivery address: ");
+    String address = sc.nextLine();
+
+    System.out.print("Enter customer city/location: ");
+    String location = sc.nextLine();
+
+    Customer customer = new Customer(name, contactNumber, email, address, location);
+    return customer;
   }
 }

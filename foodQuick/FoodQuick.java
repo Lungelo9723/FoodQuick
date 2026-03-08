@@ -83,12 +83,12 @@ public class FoodQuick {
     order.setSpecialInstructions(instructions);
 
     // -----------------------------
-    // Reading drivers.txt and creating Driver objects
+    // Reading driver-info.txt and creating Driver objects
     // -----------------------------
     ArrayList<Driver> drivers = new ArrayList<>();
 
     try {
-      File file = new File("drivers.txt");
+      File file = new File("driver-info.txt");
       Scanner fileScanner = new Scanner(file);
 
       while (fileScanner.hasNextLine()) {
@@ -110,7 +110,7 @@ public class FoodQuick {
 
       fileScanner.close();
     } catch (FileNotFoundException e) {
-      System.out.println("Error: drivers.txt file not found.");
+      System.out.println("Error: driver-info.txt file not found.");
     }
 
     // -----------------------------
